@@ -197,6 +197,26 @@ jobs:
             reports/
             logs/
           retention-days: 30
+          
+      - name: 推送报告到飞书
+        if: always()
+        env:
+          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+        run: |
+          # 发送文本通知到飞书群（最简版，保证能收到消息）
+          if [ -n "$FEISHU_WEBHOOK_URL" ]; then
+            curl -X POST $FEISHU_WEBHOOK_URL \
+              -H "Content-Type: application/json" \
+              -d '{
+                "msg_type": "text",
+                "content": {
+                  "text": "🚀 A股每日分析报告已生成！\n📅 日期：'$(TZ='Asia/Shanghai' date +%Y-%m-%d)' \n💡 可在GitHub Actions下载完整报告"
+                }
+              }'
+            echo "✅ 飞书通知已发送"
+          else
+            echo "⚠️ 未配置飞书Webhook，跳过推送"
+          fi
       
       - name: 显示运行结果
         if: always()
